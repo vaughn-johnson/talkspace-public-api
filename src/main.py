@@ -108,6 +108,5 @@ def _get_data():
         message_blocks['response_time']
 
     message_blocks.dropna(inplace=True)
-    cached_response = message_blocks.drop(['message', 'prev_message'], axis=1).head(
-    ).to_json(orient='records', date_format='iso')
-    return cached_response
+    formatted_response = message_blocks.drop(['message', 'prev_message'], axis=1).to_json(orient='records', date_format='iso')
+    return formatted_response
