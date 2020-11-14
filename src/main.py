@@ -39,7 +39,10 @@ def refresh_data(request):
         return request_json['message']
     else:
         data = json.dumps(_get_data())
-        return BUCKET.blob('messages.json').upload_from_string(data)
+        return BUCKET.blob('messages.json').upload_from_string(
+            data,
+            content_type='application/json'
+        )
 
 
 def _get_data():
