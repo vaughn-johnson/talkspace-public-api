@@ -6,6 +6,7 @@ import json
 from datetime import date, datetime
 from google.cloud import secretmanager
 from google.cloud import storage
+from flask import jsonify
 
 # Get mongo connection string
 PROJECT_ID = 'talkspace-293821'
@@ -46,7 +47,7 @@ def refresh_data(request):
             return jsonify(response_data)
 
         data = json.dumps(_get_data())
-        BUCKET.blob(cached_file).upload_from_string(
+        BUCKET.blob(cached_filename).upload_from_string(
             data,
             content_type='application/json'
         )
