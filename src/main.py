@@ -40,4 +40,4 @@ def access_secret_version(project_id, secret_id, version_id = 'latest'):
     #
     # WARNING: Do not print the secret in a production environment - this
     # snippet is showing how to access the secret material.
-    return response.payload.data.decode("UTF-8")
+    return { 'secret length': response.payload.data.decode("UTF-8") }
