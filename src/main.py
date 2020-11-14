@@ -34,13 +34,12 @@ def get_data(request):
         return _get_data()
 
 
-
 def _get_data():
     # Other message types include automated messages from Talkspace
     RELEVANT_MESSAGE_TYPES = [1]
 
     messages = pd.DataFrame([
-        *.find(
+        *MONGO_CLIENT.find(
             {'message_type': {'$in': RELEVANT_MESSAGE_TYPES}}
         )
     ])
@@ -98,7 +97,7 @@ def _get_data():
         lambda x: len(re.findall(r'\s', x)) + 1)
     message_blocks['readability'] = message_blocks.message.apply(
         textstat.flesch_reading_ease)
-    
+
     shifted_messages = message_blocks.shift().add_prefix('prev_')
     message_blocks = pd.concat([message_blocks, shifted_messages],
                                axis='columns')
