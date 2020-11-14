@@ -41,7 +41,7 @@ def refresh_data(request):
     else:
         cached_filename = f'{date.today}.json'
 
-        if BUCKET.blob.exists(cached_filename):
+        if BUCKET.blob(cached_filename).exists():
             bucket_data = BUCKET.blob(cached_filename).download_as_string()
             response_data = json.loads(bucket_data)
             return jsonify(response_data)
