@@ -3,38 +3,17 @@ import pandas as pd
 import re
 import textstat
 from datetime import datetime
-
-def _access_secret_version(project_id, secret_id, version_id='latest'):
-    """
-    Access the payload for the given secret version if one exists. The version
-    can be a version number as a string (e.g. "5") or an alias (e.g. "latest").
-    """
-
-    # Import the Secret Manager client library.
-    from google.cloud import secretmanager
-
-    # Create the Secret Manager client.
-    client = secretmanager.SecretManagerServiceClient()
-
-    # Build the resource name of the secret version.
-    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
-
-    # Access the secret version.
-    response = client.access_secret_version(request={"name": name})
-
-    # Print the secret payload.
-    #
-    # WARNING: Do not print the secret in a production environment - this
-    # snippet is showing how to access the secret material.
-    return response.payload.data.decode("UTF-8")
+from google.cloud import secretmanager
 
 
-MONGO_CONNECTION_STRING = _access_secret_version(
-    'talkspace-293821', 'MONGO_CONNECTION_STRING')
+PROJECT_ID = 'talkspace-29382'
+SECRET_ID = 'MONGO_CONNECTION_STRING'
+SECRETS_CLIENT = secretmanager.SecretManagerServiceClient()
+name = f"projects/{PROJECT_ID}/secrets/{SECRET_ID}/versions/latest"
+response = SECRETS_CLIENT.access_secret_version(request={"name": name})
 
-last_cache_refresh = datetime.now()
-
-cached_response = None
+MONGO_CONNECTION_STRING = response.payload.data.decode("UTF-8")
+MONGO_CLIENT = MongoClient(MONGO_CONNECTION_STRING).talkspace.messages
 
 
 def get_data(request):
@@ -55,22 +34,13 @@ def get_data(request):
         return _get_data()
 
 
-# Private
-
 
 def _get_data():
-    cache_age = (last_cache_refresh - datetime.now()) / datetime.timedelta(hours=1)  # noqa: F823
-
-    if cached_response and cache_age < 6:
-        return cached_response  # noqa: F823
-
-    last_cache_refresh = datetime.now()  # noqa: F841
-
     # Other message types include automated messages from Talkspace
     RELEVANT_MESSAGE_TYPES = [1]
 
     messages = pd.DataFrame([
-        *MongoClient(MONGO_CONNECTION_STRING).talkspace.messages.find(
+        *.find(
             {'message_type': {'$in': RELEVANT_MESSAGE_TYPES}}
         )
     ])
@@ -128,9 +98,10 @@ def _get_data():
         lambda x: len(re.findall(r'\s', x)) + 1)
     message_blocks['readability'] = message_blocks.message.apply(
         textstat.flesch_reading_ease)
-
-    message_blocks = pd.concat(
-        [message_blocks, message_blocks.shift().add_prefix('prev_')], axis='columns')
+    
+    shifted_messages = message_blocks.shift().add_prefix('prev_')
+    message_blocks = pd.concat([message_blocks, shifted_messages],
+                               axis='columns')
 
     # There are the quantities I'm interested in improving
     message_blocks['response_time'] = (
