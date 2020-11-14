@@ -14,7 +14,7 @@ from src.main import _get_data  # noqa: E402
 
 def test_snapshot():
     expected = _pretty_print(EXPECTED_RESPONSE)
-    observed = _pretty_print(f'{_get_data()}')
+    observed = _pretty_print(f'{json.dumps(_get_data())}')
     assert expected == observed
 
 def _pretty_print(json_string):

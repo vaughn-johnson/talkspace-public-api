@@ -39,19 +39,19 @@ def refresh_data(request):
     elif request_json and 'message' in request_json:
         return request_json['message']
     else:
-        cached_filename = f'{date.today}.json'
+        cached_filename = f'{date.today()}.json'
 
         if BUCKET.blob(cached_filename).exists():
             bucket_data = BUCKET.blob(cached_filename).download_as_string()
             response_data = json.loads(bucket_data)
             return jsonify(response_data)
 
-        data = json.dumps(_get_data())
+        data = _get_data()
         BUCKET.blob(cached_filename).upload_from_string(
-            data,
+            json.dumps(data),
             content_type='application/json'
         )
-        return jsonify(data) 
+        return jsonify(data)
 
 
 def _get_data():
@@ -130,4 +130,4 @@ def _get_data():
 
     message_blocks.dropna(inplace=True)
     formatted_response = message_blocks.drop(['message', 'prev_message'], axis=1).to_json(orient='records', date_format='iso')
-    return formatted_response
+    return json.loads(formatted_response)
