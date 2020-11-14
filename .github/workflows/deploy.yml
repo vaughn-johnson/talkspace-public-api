@@ -19,4 +19,3 @@ jobs:
           runtime: python37
           credentials: ${{ secrets.GCP_SA_KEY }}
           entry_point: hello_world
-          source_dir: src
