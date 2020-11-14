@@ -2,20 +2,28 @@ from pymongo import MongoClient
 import pandas as pd
 import re
 import textstat
+import json
 from datetime import datetime
 from google.cloud import secretmanager
+from google.cloud import storage
 
+# Get mongo connection string
 PROJECT_ID = 'talkspace-293821'
 SECRET_ID = 'MONGO_CONNECTION_STRING'
 SECRETS_CLIENT = secretmanager.SecretManagerServiceClient()
 name = f"projects/{PROJECT_ID}/secrets/{SECRET_ID}/versions/latest"
 response = SECRETS_CLIENT.access_secret_version(request={"name": name})
 
-MONGO_CONNECTION_STRING = response.payload.data.decode("UTF-8")
+# Initialize mongo client
+MONGO_CONNECTION_STRING = response.payload.data.decode('UTF-8')
 MONGO_CLIENT = MongoClient(MONGO_CONNECTION_STRING).talkspace.messages
 
+# Intialize storage client
+STORAGE_CLIENT = storage.Client()
+BUCKET = STORAGE_CLIENT.bucket('vaughn-public-talksapce-data')
 
-def get_data(request):
+
+def refresh_data(request):
     """Responds to any HTTP request.
     Args:
         request (flask.Request): HTTP request object.
@@ -30,7 +38,8 @@ def get_data(request):
     elif request_json and 'message' in request_json:
         return request_json['message']
     else:
-        return _get_data()
+        data = json.dumps(_get_data())
+        return BUCKET.blob('messages.json').upload_from_string(data)
 
 
 def _get_data():
