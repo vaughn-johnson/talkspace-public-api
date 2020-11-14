@@ -14,7 +14,7 @@ def get_data(request):
     elif request_json and 'message' in request_json:
         return request_json['message']
     else:
-        return len(MONGO_CONNECTION_STRING)
+        return { 'secret-length': len(MONGO_CONNECTION_STRING) }
 
 
 
@@ -40,4 +40,4 @@ def access_secret_version(project_id, secret_id, version_id = 'latest'):
     #
     # WARNING: Do not print the secret in a production environment - this
     # snippet is showing how to access the secret material.
-    return { 'secret length': response.payload.data.decode("UTF-8") }
+    return response.payload.data.decode("UTF-8")
