@@ -13,4 +13,4 @@ jobs:
     
     steps:
     - id: Lint
-      run: flake8 src/
+      run: pip install flake8 && flake8 src/
