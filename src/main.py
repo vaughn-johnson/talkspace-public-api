@@ -6,7 +6,7 @@ from datetime import datetime
 from google.cloud import secretmanager
 
 
-PROJECT_ID = 'talkspace-29382'
+PROJECT_ID = 'talkspace-293821'
 SECRET_ID = 'MONGO_CONNECTION_STRING'
 SECRETS_CLIENT = secretmanager.SecretManagerServiceClient()
 name = f"projects/{PROJECT_ID}/secrets/{SECRET_ID}/versions/latest"
