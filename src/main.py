@@ -3,7 +3,7 @@ import pandas as pd
 import re
 import textstat
 import json
-from datetime import datetime
+from datetime import date, datetime
 from google.cloud import secretmanager
 from google.cloud import storage
 
@@ -38,11 +38,19 @@ def refresh_data(request):
     elif request_json and 'message' in request_json:
         return request_json['message']
     else:
+        cached_filename = f'{date.today}.json'
+
+        if BUCKET.blob.exists(cached_filename):
+            bucket_data = BUCKET.blob(cached_filename).download_as_string()
+            response_data = json.loads(bucket_data)
+            return jsonify(response_data)
+
         data = json.dumps(_get_data())
-        return BUCKET.blob('messages.json').upload_from_string(
+        BUCKET.blob(cached_file).upload_from_string(
             data,
             content_type='application/json'
         )
+        return jsonify(data) 
 
 
 def _get_data():
