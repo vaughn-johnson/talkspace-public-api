@@ -5,7 +5,6 @@ import textstat
 from datetime import datetime
 from google.cloud import secretmanager
 
-
 PROJECT_ID = 'talkspace-293821'
 SECRET_ID = 'MONGO_CONNECTION_STRING'
 SECRETS_CLIENT = secretmanager.SecretManagerServiceClient()
