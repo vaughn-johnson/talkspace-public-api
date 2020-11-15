@@ -23,8 +23,10 @@ MONGO_CLIENT = MongoClient(MONGO_CONNECTION_STRING).talkspace.messages
 STORAGE_CLIENT = storage.Client()
 BUCKET = STORAGE_CLIENT.bucket('vaughn-public-talksapce-data')
 
-
 def refresh_data(request):
+    return jsonify(_refresh_data())
+
+def _refresh_data():
     """Responds to any HTTP request.
     Args:
         request (flask.Request): HTTP request object.
@@ -33,25 +35,18 @@ def refresh_data(request):
         Response object using
         `make_response <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>`.
     """
-    request_json = request.get_json()
-    if request.args and 'message' in request.args:
-        return request.args.get('message')
-    elif request_json and 'message' in request_json:
-        return request_json['message']
-    else:
-        cached_filename = f'{date.today()}.json'
+    cached_filename = f'{date.today()}.json'
 
-        if BUCKET.blob(cached_filename).exists():
-            bucket_data = BUCKET.blob(cached_filename).download_as_string()
-            response_data = json.loads(bucket_data)
-            return jsonify(response_data)
+    if BUCKET.blob(cached_filename).exists():
+        bucket_data = BUCKET.blob(cached_filename).download_as_string()
+        return json.loads(bucket_data)
 
-        data = _get_data()
-        BUCKET.blob(cached_filename).upload_from_string(
-            json.dumps(data),
-            content_type='application/json'
-        )
-        return jsonify(data)
+    data = _get_data()
+    BUCKET.blob(cached_filename).upload_from_string(
+        json.dumps(data),
+        content_type='application/json'
+    )
+    return data
 
 
 def _get_data():
@@ -102,7 +97,8 @@ def _get_data():
 
     # This associates consecutive messages (in time) from the same person
     message_block_index = messages.user_id.ne(
-        messages.user_id.shift()).cumsum()
+        messages.user_id.shift()
+    ).cumsum()
 
     message_blocks = messages.groupby(message_block_index).agg({
         'message': lambda l: '\n'.join(l),
@@ -111,16 +107,25 @@ def _get_data():
     })
 
     message_blocks['message_length'] = message_blocks.message.apply(len)
+
     message_blocks['question_count'] = message_blocks.message.apply(
-        lambda x: len(re.findall(r'\?', x)))
+        lambda x: len(re.findall(r'\?', x))
+    )
+
     message_blocks['word_count'] = message_blocks.message.apply(
-        lambda x: len(re.findall(r'\s', x)) + 1)
+        lambda x: len(re.findall(r'\s', x)) + 1
+    )
+
     message_blocks['readability'] = message_blocks.message.apply(
-        textstat.flesch_reading_ease)
+        textstat.flesch_reading_ease
+    )
 
     shifted_messages = message_blocks.shift().add_prefix('prev_')
-    message_blocks = pd.concat([message_blocks, shifted_messages],
-                               axis='columns')
+
+    message_blocks = pd.concat(
+        [message_blocks, shifted_messages],
+        axis='columns'
+    )
 
     # There are the quantities I'm interested in improving
     message_blocks['response_time'] = (
