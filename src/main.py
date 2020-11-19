@@ -41,7 +41,11 @@ def refresh_data(request):
         'Access-Control-Allow-Origin': '*'
     }
 
-    return jsonify(_refresh_data())
+    response = jsonify(_refresh_data())
+    response.header.set('Access-Control-Allow-Origin', '*')
+    response.headers.set('Access-Control-Allow-Methods', 'GET')
+
+    return response, 200
 
 def _refresh_data():
     """Responds to any HTTP request.
