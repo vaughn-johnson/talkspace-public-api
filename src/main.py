@@ -6,7 +6,7 @@ import json
 from datetime import date, datetime
 from google.cloud import secretmanager
 from google.cloud import storage
-from flask import jsonify
+from flask import jsonify, Response
 
 # Get mongo connection string
 PROJECT_ID = 'talkspace-293821'
@@ -44,12 +44,12 @@ def refresh_data(request):
     data_format = request.args.get('format')
 
     if not data_format in ['json', 'csv']:
-        return "Invalid data format. Expected 'json' or 'csv'", 422
+        return "Invalid value for parameter 'format'. Expected 'json' or 'csv'", 422
 
     if data_format == 'json':
         response = jsonify(_refresh_data(data_format))
     else:
-        response = _refresh_data(data_format)
+        response = Response(_refresh_data(data_format))
   
     response.headers.set('Access-Control-Allow-Origin', '*')
     response.headers.set('Access-Control-Allow-Methods', 'GET')
