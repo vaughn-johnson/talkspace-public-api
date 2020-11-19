@@ -41,36 +41,57 @@ def refresh_data(request):
         'Access-Control-Allow-Origin': '*'
     }
 
-    response = jsonify(_refresh_data())
+    data_format = request.args.get('format') or 'json'
+
+    if not data_format in ['json', 'csv']:
+        return "Invalid data format. Expected 'json' or 'csv'", 422
+
+    if data_format == 'json':
+        response = jsonify(_refresh_data(data_format))
+    else:
+        response = _refresh_data(data_format)
+  
     response.headers.set('Access-Control-Allow-Origin', '*')
     response.headers.set('Access-Control-Allow-Methods', 'GET')
 
     return response, 200
 
-def _refresh_data():
-    """Responds to any HTTP request.
+def _refresh_data(data_format = 'json'):
+    """Checks cache and returns data
     Args:
-        request (flask.Request): HTTP request object.
+        data_format: 'csv' or 'json'
     Returns:
-        The response text or any set of values that can be turned into a
-        Response object using
-        `make_response <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>`.
+        request object with csv or json of data
     """
-    cached_filename = f'{date.today()}.json'
+
+    cached_filename = f'{date.today()}.{data_format}'
 
     if BUCKET.blob(cached_filename).exists():
         bucket_data = BUCKET.blob(cached_filename).download_as_string()
-        return json.loads(bucket_data)
 
-    data = _get_data()
+        if data_format == 'json':
+            return json.loads(bucket_data)
+        else:
+            return bucket_data 
+
+    df = _get_data()
+
+    if data_format == 'csv':
+        data = df.to_csv(date_format='iso')
+        res = data
+    else:
+       data = df.to_json(orient='records', date_format='iso')
+       res = json.loads(data)
+  
     BUCKET.blob(cached_filename).upload_from_string(
-        json.dumps(data),
+        data,
         content_type='application/json'
     )
-    return data
+    
+    return res
 
 
-def _get_data():
+def _get_data(data_format = 'json'):
     # Other message types include automated messages from Talkspace
     RELEVANT_MESSAGE_TYPES = [1]
 
@@ -155,5 +176,5 @@ def _get_data():
         message_blocks['response_time']
 
     message_blocks.dropna(inplace=True)
-    formatted_response = message_blocks.drop(['message', 'prev_message'], axis=1).to_json(orient='records', date_format='iso')
-    return json.loads(formatted_response)
+
+    return message_blocks.drop(['message', 'prev_message'], axis=1)
