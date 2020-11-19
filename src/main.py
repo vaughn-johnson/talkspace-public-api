@@ -40,8 +40,8 @@ def refresh_data(request):
     headers = {
         'Access-Control-Allow-Origin': '*'
     }
-
-    data_format = request.args.get('format') or 'json'
+    
+    data_format = request.args.get('format')
 
     if not data_format in ['json', 'csv']:
         return "Invalid data format. Expected 'json' or 'csv'", 422
@@ -56,7 +56,7 @@ def refresh_data(request):
 
     return response, 200
 
-def _refresh_data(data_format = 'json'):
+def _refresh_data(data_format):
     """Checks cache and returns data
     Args:
         data_format: 'csv' or 'json'
