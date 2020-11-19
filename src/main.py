@@ -23,6 +23,31 @@ MONGO_CLIENT = MongoClient(MONGO_CONNECTION_STRING).talkspace.messages
 STORAGE_CLIENT = storage.Client()
 BUCKET = STORAGE_CLIENT.bucket('vaughn-public-talksapce-data')
 
+def cors_enabled_function(request):
+    # For more information about CORS and CORS preflight requests, see
+    # https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request
+    # for more information.
+
+    # Set CORS headers for the preflight request
+    if request.method == 'OPTIONS':
+        # Allows GET requests from any origin with the Content-Type
+        # header and caches preflight response for an 3600s
+        headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Max-Age': '3600'
+        }
+
+        return ('', 204, headers)
+
+    # Set CORS headers for the main request
+    headers = {
+        'Access-Control-Allow-Origin': '*'
+    }
+
+    return ('Hello World!', 200, headers)
+
 def refresh_data(request):
     if request.method == 'OPTIONS':
         # Allows GET requests from any origin with the Content-Type
@@ -41,7 +66,11 @@ def refresh_data(request):
         'Access-Control-Allow-Origin': '*'
     }
 
-    return jsonify(_refresh_data())
+    response = jsonify(_refresh_data())
+    response.header.set('Access-Control-Allow-Origin', '*')
+    response.headers.set('Access-Control-Allow-Methods', 'GET')
+
+    return response, 200
 
 def _refresh_data():
     """Responds to any HTTP request.
