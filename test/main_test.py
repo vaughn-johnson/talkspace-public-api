@@ -28,7 +28,7 @@ def test_cold_cache_json():
     find = MockPyMongo.MongoClient().talkspace.messages.find
     find.reset_mock()
 
-    _refresh_data()
+    _refresh_data('json')
 
     find.assert_called_once()
 
@@ -39,18 +39,28 @@ def test_cold_cache_csv():
     find = MockPyMongo.MongoClient().talkspace.messages.find
     find.reset_mock()
 
-    _refresh_data(data_format='csv')
+    _refresh_data('csv')
 
     find.assert_called_once()
 
-def test_warm_cache():
+def test_warm_cache_json():
     _blob().return_value.exists = lambda: True
     _blob().return_value.download_as_string.return_value = '{}'
 
     find = MockPyMongo.MongoClient().talkspace.messages.find
     find.reset_mock()
 
-    _refresh_data()
+    _refresh_data('json')
+    find.assert_not_called()
+
+def test_warm_cache_csv():
+    _blob().return_value.exists = lambda: True
+    _blob().return_value.download_as_string.return_value = '{}'
+
+    find = MockPyMongo.MongoClient().talkspace.messages.find
+    find.reset_mock()
+
+    _refresh_data('csv')
     find.assert_not_called()
 
 def _pretty_print(json_string):
