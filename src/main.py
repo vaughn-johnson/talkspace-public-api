@@ -77,7 +77,7 @@ def _refresh_data(data_format):
     df = _get_data()
 
     if data_format == 'csv':
-        data = df.to_csv(date_format='iso')
+        data = df.to_csv()
         res = data
     else:
        data = df.to_json(orient='records', date_format='iso')
