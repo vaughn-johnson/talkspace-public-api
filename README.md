@@ -4,7 +4,7 @@
 
 A public API hosted on Google Cloud Functions that returns some select features of all the messages exchanged between me and my therapist.
 
-Available [here](https://us-central1-talkspace-293821.cloudfunctions.net/talkspace-public-api). Results are cached daily
+Available [here](https://us-central1-talkspace-293821.cloudfunctions.net/talkspace-public-api?format=csv). Results are cached daily
 
 The observational unit here has been changed from individual messages to blocks of messages sent by the same person. The messages were concatenated, the `created_at` time was taken to be the first of the block.
 
